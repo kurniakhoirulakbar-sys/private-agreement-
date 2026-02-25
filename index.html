@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Perjanjian Seumur Hidup</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:#0f172a;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.container{
+width:100%;
+max-width:500px;
+padding:20px;
+}
+
+h1,h2,h3{text-align:center;}
+
+input, textarea, select{
+width:100%;
+padding:10px;
+margin:6px 0;
+border-radius:10px;
+border:none;
+font-size:14px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+background:#22c55e;
+color:white;
+font-weight:bold;
+}
+
+.hidden{display:none;}
+
+.progress{
+height:8px;
+background:#1e293b;
+border-radius:10px;
+margin-bottom:15px;
+}
+
+.bar{
+height:8px;
+background:#22c55e;
+border-radius:10px;
+width:0%;
+}
+
+canvas{
+background:white;
+border-radius:10px;
+margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="progress"><div class="bar" id="bar"></div></div>
+
+<!-- HALAMAN AWAL -->
+<div id="page0">
+<h1>Perjanjian Hubungan</h1>
+<h3>Kurnia Khoirul Akbar</h3>
+<h3>&</h3>
+<h3>Elsa Romadhoni</h3>
+<button onclick="nextPage(1,25)">Mulai</button>
+</div>
+
+<!-- SESI 1 -->
+<div id="page1" class="hidden">
+<h2>Sesi 1</h2>
+<p>Tulis semua yang adek tidak bolehin ke mas</p>
+<div id="list15"></div>
+<button onclick="nextPage(2,50)">Lanjut</button>
+</div>
+
+<!-- SESI 2 -->
+<div id="page2" class="hidden">
+<h2>Sesi 2</h2>
+
+<p>1. Bersediakah adek melakukan juga larangan yang adek berikan ke mas?</p>
+<select id="q1">
+<option>Bersedia</option>
+<option>Tidak</option>
+</select>
+
+<p>2. Sikap seperti apa yang adek ingin jika mas lagi marah atau sebaliknya?</p>
+<textarea id="q2"></textarea>
+
+<p>3. Mau sampai kapan aku kamu tidak berlaku di hubungan kita?</p>
+<textarea id="q3"></textarea>
+
+<button onclick="nextPage(3,75)">Lanjut</button>
+</div>
+
+<!-- SESI 3 -->
+<div id="page3" class="hidden">
+<h2>Sesi 3</h2>
+<p>Apa yang pengen banget adek sampaikan ke mas</p>
+<div id="opini5"></div>
+
+<h3>Tanda Tangan Digital</h3>
+<canvas id="signature" width="300" height="150"></canvas>
+<button onclick="clearSign()">Hapus Tanda Tangan</button>
+<button onclick="finish()">Tanda Tangan Digital</button>
+</div>
+
+<!-- HASIL -->
+<div id="page4" class="hidden">
+<h2>Perjanjian Disetujui</h2>
+<div id="hasil"></div>
+</div>
+
+</div>
+
+<script>
+for(let i=1;i<=15;i++){
+document.getElementById("list15").innerHTML+=`<input placeholder="Larangan ${i}">`;
+}
+
+for(let i=1;i<=5;i++){
+document.getElementById("opini5").innerHTML+=`<textarea placeholder="Pesan ${i}"></textarea>`;
+}
+
+function nextPage(page,progress){
+for(let i=0;i<=4;i++){
+document.getElementById("page"+i).classList.add("hidden");
+}
+document.getElementById("page"+page).classList.remove("hidden");
+document.getElementById("bar").style.width=progress+"%";
+}
+
+let canvas=document.getElementById("signature");
+let ctx=canvas.getContext("2d");
+let drawing=false;
+
+canvas.addEventListener("mousedown",()=>drawing=true);
+canvas.addEventListener("mouseup",()=>drawing=false);
+canvas.addEventListener("mousemove",draw);
+
+canvas.addEventListener("touchstart",()=>drawing=true);
+canvas.addEventListener("touchend",()=>drawing=false);
+canvas.addEventListener("touchmove",drawTouch);
+
+function draw(e){
+if(!drawing)return;
+ctx.lineWidth=2;
+ctx.lineCap="round";
+ctx.strokeStyle="black";
+ctx.lineTo(e.offsetX,e.offsetY);
+ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(e.offsetX,e.offsetY);
+}
+
+function drawTouch(e){
+e.preventDefault();
+if(!drawing)return;
+let rect=canvas.getBoundingClientRect();
+let x=e.touches[0].clientX-rect.left;
+let y=e.touches[0].clientY-rect.top;
+ctx.lineWidth=2;
+ctx.lineCap="round";
+ctx.strokeStyle="black";
+ctx.lineTo(x,y);
+ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(x,y);
+}
+
+function clearSign(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+function finish(){
+let waktu=new Date().toLocaleString();
+
+let hasil=`
+<p><b>Nama:</b> Kurnia Khoirul Akbar & Elsa Romadhoni</p>
+<p><b>Tanggal Pengisian:</b> ${waktu}</p>
+<p>Status: Perjanjian Telah Disepakati 🤍</p>
+`;
+
+document.getElementById("hasil").innerHTML=hasil;
+
+nextPage(4,100);
+
+/* AUTO PDF */
+setTimeout(()=>{
+html2pdf().from(document.getElementById("page4")).save("Perjanjian_Kurnia_Elsa.pdf");
+},1000);
+
+/* AUTO WA */
+let pesan=encodeURIComponent(
+"Perjanjian telah disetujui 🤍\n"+
+"Nama: Kurnia Khoirul Akbar & Elsa Romadhoni\n"+
+"Tanggal: "+waktu
+);
+
+window.location.href="https://wa.me/6282334682923?text="+pesan;
+}
+</script>
+
+</body>
+</html>
